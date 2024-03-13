@@ -120,7 +120,19 @@ contract NFinTech is IERC721 {
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId) public {
-        safeTransferFrom(from, to, tokenId, "");
+        require(_owner[tokenId] == from, "ERC721: transfer of token that is not own");
+        require(to != address(0), "ERC721: transfer to the zero address");
+        require(msg.sender == from || getApproved(tokenId) == msg.sender || isApprovedForAll(from, msg.sender), "ERC721: transfer caller is not owner nor approved");
+
+        // 执行转移操作
+        _balances[from] -= 1;
+        _balances[to] += 1;
+        _owner[tokenId] = to;
+
+        // 清除之前的授权
+        _tokenApproval[tokenId] = address(0);
+
+        emit Transfer(from, to, tokenId);
         }
 
 }
