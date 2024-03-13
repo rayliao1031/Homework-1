@@ -59,18 +59,29 @@ contract LiaoToken is IERC20 {
     }
 
     function transfer(address to, uint256 amount) external returns (bool) {
-        // TODO: please add your implementaiton here
+        require(_balances[msg.sender] >= amount, "ERC20: transfer amount exceeds balance");
+        _balances[msg.sender] -= amount;
+        _balances[to] += amount;
+        emit Transfer(msg.sender, to, amount);
+        return true;
     }
-
-    function transferFrom(address from, address to, uint256 value) external returns (bool) {
-        // TODO: please add your implementaiton here
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(_balances[from] >= amount, "ERC20: transfer amount exceeds balance");
+        require(_allowances[from][msg.sender] >= amount, "ERC20: transfer amount exceeds allowance");
+        _balances[from] -= amount;
+        _balances[to] += amount;
+        _allowances[from][msg.sender] -= amount;
+        emit Transfer(from, to, amount);
+        return true;
     }
-
+    mapping(address => mapping(address => uint256)) private _allowances;
     function approve(address spender, uint256 amount) external returns (bool) {
-        // TODO: please add your implementaiton here
+        _allowances[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
     }
 
     function allowance(address owner, address spender) public view returns (uint256) {
-        // TODO: please add your implementaiton here
+        return _allowances[owner][spender];
     }
 }
