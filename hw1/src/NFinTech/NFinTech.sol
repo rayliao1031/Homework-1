@@ -115,24 +115,42 @@ contract NFinTech is IERC721 {
         emit Transfer(from, to, tokenId);
         }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) public {
-       transferFrom(from, to, tokenId);
+     function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) public override {
+        _safeTransferFrom(from, to, tokenId, data);
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId) public {
-        require(_owner[tokenId] == from, "ERC721: transfer of token that is not own");
-        require(to != address(0), "ERC721: transfer to the zero address");
-        require(msg.sender == from || getApproved(tokenId) == msg.sender || isApprovedForAll(from, msg.sender), "ERC721: transfer caller is not owner nor approved");
+    function safeTransferFrom(address from, address to, uint256 tokenId) public override {
+        _safeTransferFrom(from, to, tokenId, bytes(""));
+    }
 
-        // 执行转移操作
-        _balances[from] -= 1;
-        _balances[to] += 1;
-        _owner[tokenId] = to;
+    function _safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) internal {
+        transferFrom(from, to, tokenId);
+        require(_checkOnERC721Received(from, to, tokenId, data), "ERC721: transfer to non ERC721Receiver implementer");
+    }
 
-        // 清除之前的授权
-        _tokenApproval[tokenId] = address(0);
-
-        emit Transfer(from, to, tokenId);
+    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) private returns (bool) {
+         if (isContract(to)) {
+            try IERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 retval) {
+                return retval == IERC721TokenReceiver.onERC721Received.selector;
+            } catch (bytes memory reason) {
+                if (reason.length == 0) {
+                    revert("ERC721: transfer to non ERC721Receiver implementer");
+                } else {
+                    assembly {
+                        revert(add(32, reason), mload(reason))
+                    }
+                }
+            }
+        } else {
+            return true;
         }
+    }
 
+    function isContract(address addr) private view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        return size > 0;
+    }
 }
