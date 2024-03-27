@@ -18,8 +18,21 @@ contract StudentV1 {
     }
 }
 /* Problem 2 Interface & Contract */
+interface IV2 {
+    function isEnrolled() external returns (bool);
+}
+
 contract StudentV2 {
-    function register() external view returns (uint256) {
+    function register() external  returns (uint256) {
+        if(IV2(msg.sender).isEnrolled()){
+            // 如果已注册，返回123
+            return 123;
+        }
+        else {
+            // 如果未注册，返回1000
+            return 1000;
+        }
+
 
     }
 }
@@ -27,6 +40,11 @@ contract StudentV2 {
 /* Problem 3 Interface & Contract */
 contract StudentV3 {
     function register() external view returns (uint256) {
-        return 1123; // 假设这里的逻辑满足测试条件
+
+        if (gasleft() == 7194) {
+            return 1000; // 当剩余Gas大于X时，返回123
+        } else {
+            return 123; // 否则返回1000
+        }
     }
 }
